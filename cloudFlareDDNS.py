@@ -6,13 +6,18 @@ import time
 
 help = """
 -v = Verbose output
--A = update IPv4 records
--AAAA = update IPv6 records
--ZONE=<zone_id> = Cloudflare zone ID
+-A = Update IPv4 records
+-AAAA = Update IPv6 records
+
+Recommended to be hardcoded at the start of main():
+  -ZONE=<zone_id>      = Cloudflare zone ID
+  -TOKEN=<api_token>   = Cloudflare API token with zone edit permissions
+  -DOMAIN=<domain>     = The domain to set the records for
+
 -d4=<ip> = IPv4 record destination
 -d6=<ip> = IPv6 record destination
--t=<seconds> = loop delay in seconds
--s = run once (no loop)
+-t=<seconds> = Loop delay in seconds
+-s = Run once (no loop)
 """
 
 successStatusCodes = [200]
@@ -77,13 +82,16 @@ def getPublicIpIpv6():
             return line.split("=")[1]
         
 def main(lasts,delay=120): # Default 2 minutes
-    apiToken = "YourApiToken"  # KEEP SECRET
+    ###HARDCODE THESE###
+    apiToken = ""  # KEEP SECRET
+    zone = ""
+    domain = ""
+    ###-###
+
     a = False
     aaaa = False
     dest4 = ""
     dest6 = ""
-    zone = "YourCloudFlareZoneId"
-    domain = "YourDomain.com"
     checkIfLast = True
     loop = True
 
@@ -91,20 +99,25 @@ def main(lasts,delay=120): # Default 2 minutes
     verbose = "-v" in sys.argv or "-V" in sys.argv
 
     for arg in sys.argv:
+        
         if "-a" in arg.lower() and "-aaaa" not in arg.lower():
             a = True
         if "-aaaa" in arg.lower():
             aaaa = True
         if "-s" in arg.lower():
             loop = False
-        if "-zone" in arg.lower():
+        if "-zone=" in arg.lower():
             zone = arg.split("=")[1]
-        if "-d4" in arg.lower():
+        if "-d4=" in arg.lower():
             dest4 = arg.split("=")[1]
-        if "-d6" in arg.lower():
+        if "-d6=" in arg.lower():
             dest6 = arg.split("=")[1]
-        if "-t" in arg.lower():
+        if "-token=" in arg.lower():
+            apiToken = arg.split("=")[1]
+        if "-t=" in arg.lower():
             delay = float(arg.split("=")[1])
+        if "-domain=" in arg.lower():
+            domain = arg.split("=")[1]
 
     if a:
         if dest4 == "":
@@ -161,6 +174,11 @@ def main(lasts,delay=120): # Default 2 minutes
 lasts = []
 loop = True
 if __name__ == "__main__":
+
+    if "-h" in sys.argv or "-H" in sys.argv:
+        print(help)
+        exit()
+
     while loop:
         try:
             lasts,loop = main(lasts)
