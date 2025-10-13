@@ -9,6 +9,8 @@ Feel free to fork/edit the script to your needs.
 
 Usage:
 
+python3 cloudflareDDNS.py -h # prints help menu and exits
+
 python3 cloudflareDDNS.py -A 
 
 python3 cloudflareDDNS.py -A -zone="ZONEID"
