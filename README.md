@@ -1,7 +1,7 @@
 # Simple-Cloudflare-ddns
 Very simple cloudflare dynamic dns updater in python.
 
-Currently only works for A and AAAA records.
+Currently only works for A (ipv4) and AAAA (ipv6) records.
 
 Api token, zone id and domain reccomended to be hardcoded in main()
 
