@@ -42,7 +42,7 @@ class cloudflareClient:
     def updateDnsRecord(self, zone, record_type, dest, domain, proxied=False, ttl=1):
         record_id = self.getRecordId(zone, domain, record_type)
         if not record_id:
-            print(f"Record of type {record_type} not found for {domain}")
+            log(f"Record of type {record_type} not found for {domain}")
             return None
         url = f"https://api.cloudflare.com/client/v4/zones/{zone}/dns_records/{record_id}"
         headers = {
@@ -80,6 +80,15 @@ def getPublicIpIpv6():
     for line in ip.splitlines():
         if line.startswith("ip="):
             return line.split("=")[1]
+        
+def log(msg,file=None,stdout=True,end="\n"):
+    header = f"[{time.strftime("%Y-%m-%d %H:%M%S")}]: "
+    out = f"{header}{msg}"
+    if stdout:
+        print(out,end=end)
+    if file is not None:
+        with open(file,"a") as f:
+            f.write(out + end)
         
 def main(lasts,delay=120): # Default 2 minutes
     ###HARDCODE THESE###
@@ -130,42 +139,42 @@ def main(lasts,delay=120): # Default 2 minutes
         client = cloudflareClient(apiToken)
     else:
         if verbose:
-            print("No records changed... Returning.")
+            log("No records changed... Returning.")
         if loop:
             time.sleep(delay)
         return [dest4,dest6], loop
 
     if client._authResponse.status_code in successStatusCodes:
-        print("Authentication successful!")
+        log("Authentication successful!")
     else:
-        print(f"AUTHENTICATION FAILED! (Cloudflare responded with code: {client._authResponse.status_code})")
+        log(f"AUTHENTICATION FAILED! (Cloudflare responded with code: {client._authResponse.status_code})")
         if verbose:
-            print(client._authResponse.text)
+            log(client._authResponse.text)
         exit(1)
 
     if a:
         if checkIfLast == True and dest4 not in lasts:
             resp = client.updateDnsRecord(zone, "A", dest4, domain)
             if resp and resp.status_code in successStatusCodes:
-                print(f"A record updated to {dest4}")
+                log(f"A record updated to {dest4}")
             else:
-                print("FAILED UPDATING A RECORD!")
+                log("FAILED UPDATING A RECORD!")
             if verbose and resp:
-                print(resp.text)
+                log(resp.text)
         elif verbose:
-            print("A record not changed... continuing.")
+            log("A record not changed... continuing.")
 
     if aaaa:
         if checkIfLast == True and dest6 not in lasts:
             resp = client.updateDnsRecord(zone, "AAAA", dest6, domain)
             if resp and resp.status_code in successStatusCodes:
-                print(f"AAAA record updated to {dest6}")
+                log(f"AAAA record updated to {dest6}")
             else:
-                print("FAILED UPDATING AAAA RECORD!")
+                log("FAILED UPDATING AAAA RECORD!")
             if verbose and resp:
-                print(resp.text)
+                log(resp.text)
         elif verbose:
-            print("AAAA record not changed... continuing.")
+            log("AAAA record not changed... continuing.")
 
     if loop:
         time.sleep(delay)
@@ -176,14 +185,14 @@ loop = True
 if __name__ == "__main__":
 
     if "-h" in sys.argv or "-H" in sys.argv:
-        print(help)
+        log(help)
         exit()
 
     while loop:
         try:
             lasts,loop = main(lasts)
         except Exception as ex:
-            print(str(ex))
+            log(str(ex))
             time.sleep(30)
     
 
